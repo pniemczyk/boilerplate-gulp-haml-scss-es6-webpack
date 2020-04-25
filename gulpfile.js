@@ -3,23 +3,24 @@
  */
 
 // Requirements
-var gulp                = require('gulp');
-var gutil               = require("gulp-util");
-var haml                = require('gulp-haml-coffee');
-var sass                = require('gulp-sass');
-var uglify              = require('gulp-uglify');
-var notify              = require("gulp-notify");
-var webpack             = require("gulp-webpack");
-const webserver         = require('gulp-webserver');
-var webpackConfig       = require("./webpack.config.js");
-
+const gulp           = require('gulp');
+const gutil          = require("gulp-util");
+const haml           = require('gulp-haml-coffee');
+const sass           = require('gulp-sass');
+const uglify         = require('gulp-uglify');
+const notify         = require("gulp-notify");
+const webpack        = require("gulp-webpack");
+const webserver      = require('gulp-webserver');
+const webpackConfig  = require("./webpack.config.js");
+const injectPartials = require('gulp-inject-partials');
 // Paths
-var paths = {
-    scripts: ['src/assets/js/*.js'],
-    sass:    ['src/assets/css/*.sass'],
-    haml:    ['src/**/*.haml'],
-    images:  ['src/assets/images/**/*.*'],
-    favicon: ['src/favicon.*']
+const paths = {
+    scripts:  ['src/assets/js/*.js'],
+    sass:     ['src/assets/css/*.sass'],
+    haml:     ['src/**/*.haml'],
+    images:   ['src/assets/images/**/*.*'],
+    favicon:  ['src/favicon.*'],
+    partials: ['./build/**/*.html']
 };
 
 // HTML
@@ -51,6 +52,7 @@ gulp.task('watch', function() {
     gulp.watch(paths.sass, ['sass']);
     gulp.watch(paths.images, ['copy-img']);
     gulp.watch(paths.favicon, ['copy-favicon']);
+    gulp.watch(paths.partials, ['partials']);
 });
 
 gulp.task('webserver', function() {
@@ -74,9 +76,15 @@ gulp.task('copy-favicon', function() {
     .pipe(gulp.dest('./build/'));
 });
 
+gulp.task('partials', function () {
+  return gulp.src('./build/**/*.html')
+           .pipe(injectPartials({ start: "<!-- ## {{path}}", end: "## -->", removeTags: true }))
+           .pipe(gulp.dest('./build'));
+});
+
 
 const COPY    = ['copy-img', 'copy-favicon'];
-const DEFAULT = ['watch', 'javascript', 'haml', 'sass', 'copy-resources', 'webserver'];
+const DEFAULT = ['watch', 'javascript', 'haml', 'sass', 'copy-resources', 'partials', 'webserver'];
 
 gulp.task('copy-resources', COPY);
 
