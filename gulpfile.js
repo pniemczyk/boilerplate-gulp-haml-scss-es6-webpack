@@ -1,22 +1,38 @@
-/**
- * Created by jefvlamings on 14/05/15.
- */
-
 // Requirements
 const gulp           = require('gulp');
 const gutil          = require("gulp-util");
 const haml           = require('gulp-haml-coffee');
-const sass           = require('gulp-sass');
+const scss           = require('gulp-ruby-sass');
 const uglify         = require('gulp-uglify');
 const notify         = require("gulp-notify");
-const webpack        = require("gulp-webpack");
 const webserver      = require('gulp-webserver');
-const webpackConfig  = require("./webpack.config.js");
 const injectPartials = require('gulp-inject-partials');
+const clean          = require('gulp-clean');
+const pipeline       = require('readable-stream').pipeline;
+
+function errorLog(error) {
+    console.error.bind(error);
+    this.emit('end');
+}
+
+const webserverOpts = {
+  port: 8000,
+  livereload: true,
+  // directoryListing: true,
+  open: true
+}
+
 // Paths
 const paths = {
-    scripts:  ['src/assets/js/*.js'],
-    sass:     ['src/assets/css/*.sass'],
+    dest:     {
+      root:    './build',
+      scripts: './build/assets/js',
+      styles:  './build/assets/css',
+      images:  './build/assets/images'
+    },
+    build:    ['build'],
+    scripts:  ['src/assets/js/**/*.js'],
+    styles:   ['src/assets/css/**/*.scss'],
     haml:     ['src/**/*.haml'],
     images:   ['src/assets/images/**/*.*'],
     favicon:  ['src/favicon.*'],
@@ -25,68 +41,76 @@ const paths = {
 
 // HTML
 gulp.task('haml', function () {
-    gulp.src(paths.haml)
-        .pipe(haml())
-        .pipe(gulp.dest('build'));
+  return gulp.src(paths.haml)
+          .pipe(haml())
+          .pipe(gulp.dest(paths.dest.root))
+          .pipe(notify("Haml bundling done."));
 });
 
 // Javascript
-gulp.task("javascript", function() {
-    return gulp.src('src/assets/js/app.js')
-        .pipe(webpack(webpackConfig))
-        .pipe(gulp.dest('build/assets/js'))
-        .pipe(notify("Bundling done."));
+gulp.task("scripts", function() {
+  return gulp.src(paths.scripts)
+           .pipe(uglify())
+           .pipe(gulp.dest(paths.dest.scripts))
+           .pipe(notify("Scripts bundling done."));
 });
 
-// Sass
-gulp.task('sass', function () {
-    gulp.src(paths.sass)
-        .pipe(sass({ indentedSyntax: true }).on('error', sass.logError))
-        .pipe(gulp.dest('build/assets/css'));
+// Styles
+gulp.task('styles', function () {
+  return scss(paths.styles)
+          .on('error', errorLog)
+          .pipe(gulp.dest(paths.dest.styles))
+          .pipe(notify("Styles bundling done."));
 });
 
 // Watch task
 gulp.task('watch', function() {
-    gulp.watch(paths.scripts, ['javascript']);
+    gulp.watch(paths.scripts, ['scripts']);
     gulp.watch(paths.haml, ['haml']);
-    gulp.watch(paths.sass, ['sass']);
+    gulp.watch(paths.styles, ['styles']);
     gulp.watch(paths.images, ['copy-img']);
     gulp.watch(paths.favicon, ['copy-favicon']);
     gulp.watch(paths.partials, ['partials']);
 });
 
+// Clean
+gulp.task('clean', function(cb) {
+  gulp.src(['build/assets/css', 'build/assets/js', 'build/assets/images'], {read: false})
+    .pipe(clean());
+
+  cb();
+});
+
 gulp.task('webserver', function() {
-  return gulp.src('build')
-    .pipe(webserver({
-      path: './build',
-      livereload: true,
-      directoryListing: true,
-      open: true,
-      fallback: 'index.html'
-    }));
+  return gulp.src(paths.build)
+          .pipe(webserver(webserverOpts));
 });
 
 gulp.task('copy-img', function() {
-  return gulp.src('./src/assets/images/**/*.*')
-    .pipe(gulp.dest('./build/assets/images/'));
+  return gulp.src(paths.images)
+           .pipe(gulp.dest(paths.dest.images));
 });
 
 gulp.task('copy-favicon', function() {
-  return gulp.src('./src/favicon.*')
-    .pipe(gulp.dest('./build/'));
+  return gulp.src(paths.favicon)
+           .pipe(gulp.dest(paths.dest.root));
 });
 
 gulp.task('partials', function () {
-  return gulp.src('./build/**/*.html')
+  return gulp.src(paths.partials)
            .pipe(injectPartials({ start: "<!-- ## {{path}}", end: "## -->", removeTags: true }))
-           .pipe(gulp.dest('./build'));
+           .pipe(gulp.dest(paths.dest.root))
+           .pipe(notify("Partials bundling done."));
 });
 
 
 const COPY    = ['copy-img', 'copy-favicon'];
-const DEFAULT = ['watch', 'javascript', 'haml', 'sass', 'copy-resources', 'partials', 'webserver'];
+const BUILD   = ['scripts', 'styles', 'copy-resources', 'haml', 'partials']
+const DEFAULT = BUILD.concat(['watch', 'webserver']);
 
 gulp.task('copy-resources', COPY);
+
+gulp.task('build', ['clean'].concat(BUILD));
 
 // Default task
 gulp.task('default', DEFAULT);

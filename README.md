@@ -1,11 +1,10 @@
-# Boilerplate for Gulp + Webpack + HAML + SASS
-Minimal setup for building modular javascript apps with ES6, HAML and SASS
+# Boilerplate for Gulp JS + HAML + SCSS
+Minimal setup for building modular javascript apps with ES6, HAML and SCSS
 - HAML compilation to HTML
 - ES6 compilation to JS
-- SASS compilation to CSS
+- SCSS compilation to CSS
 - Separate build directory for easy deployments
 - Uglify to obscure and minify javascript 
-- Webpack to bundle modules
 - Gulp watch for incremental builds (compiling on save)
 - Growl notifications
 - Assets copy
