@@ -1,6 +1,6 @@
 {
   "name": "Boilerplate",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A boilerplate for front-end applications using Gulp, Browserify, Coffeescript, SASS and HAML",
   "main": "gulpfile.js",
   "dependencies": {
@@ -14,7 +14,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Jef Vlamings",
+  "author": "Pawel Niemczyk",
   "license": "ISC",
   "devDependencies": {
     "babel-core": "^5.4.3",
