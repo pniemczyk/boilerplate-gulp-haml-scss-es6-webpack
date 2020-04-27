@@ -24,7 +24,8 @@ $ gulp
 ## Partials
 Simply put inside haml file line:
 ```
-/## partials/_footer.html ##
+/partial:partials/_footer.html
+/partial
 ```
 
 where `partials/_footer.html` is relative path to the partial file.

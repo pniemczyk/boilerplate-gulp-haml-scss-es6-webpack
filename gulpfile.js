@@ -8,7 +8,6 @@ const notify         = require("gulp-notify");
 const webserver      = require('gulp-webserver');
 const injectPartials = require('gulp-inject-partials');
 const clean          = require('gulp-clean');
-const pipeline       = require('readable-stream').pipeline;
 
 function errorLog(error) {
     console.error.bind(error);
@@ -96,9 +95,16 @@ gulp.task('copy-favicon', function() {
            .pipe(gulp.dest(paths.dest.root));
 });
 
+const partialsOpts = {
+  start: "<!-- $$ {{path}}",
+  end: "$$ -->",
+  ignoreError: true,
+  removeTags: false
+}
+
 gulp.task('partials', function () {
   return gulp.src(paths.partials)
-           .pipe(injectPartials({ start: "<!-- ## {{path}}", end: "## -->", removeTags: true }))
+           .pipe(injectPartials())
            .pipe(gulp.dest(paths.dest.root))
            .pipe(notify("Partials bundling done."));
 });
